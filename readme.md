@@ -1,0 +1,1 @@
+THis is a sketch to communicate between raspberry pi and stm32
