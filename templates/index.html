@@ -775,7 +775,8 @@
                             console.error('Command failed to send to Flask. Status:', response.status);
                             arduinoStatusDisplay.textContent = `🔴 Status failed`;
                         } else {
-                            updateArduinoStatus();
+                            // Immediately call for a status update after a successful command send
+                            updateArduinoStatus(); 
                         }
                     })
                     .catch(e => {
@@ -786,32 +787,41 @@
         });
 
         function updateArduinoStatus() {
-            if (!isSpeedPanelActive) {
-                fetch(`${FLASK_BASE_URL}/status`)
-                    .then(response => {
-                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                        return response.text();
-                    })
-                    .then(status => {
-                        if (status) {
-                            arduinoStatusDisplay.textContent = `🟢 Arduino Connected - Mode: ${status.replace('_OK', '')}`;
-                        } else {
-                            arduinoStatusDisplay.textContent = `🟡 Arduino Connected - Awaiting Mode`;
-                        }
-                        Object.values(buttons).forEach(btn => btn.classList.remove('active-btn'));
-                        if (status === 'GLIDE_ON') {
-                            buttons.glide.classList.add('active-btn');
-                            currentActiveButtonId = 'glide';
-                        } else if (status === 'CIRCLE_OFF') {
-                            buttons.circle.classList.add('active-btn');
-                            currentActiveButtonId = 'circle';
-                        }
-                    })
-                    .catch(e => {
-                        console.error('Arduino Status fetch error:', e);
-                        arduinoStatusDisplay.textContent = `🔴 Status failed`;
-                    });
+            if (isSpeedPanelActive) {
+                // If the speed panel is active, we don't need to poll the arduino status
+                setTimeout(updateArduinoStatus, 300);
+                return;
             }
+            fetch(`${FLASK_BASE_URL}/status`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.text();
+                })
+                .then(status => {
+                    if (status) {
+                        // Clean up the status text for display
+                        const mode = status.replace('_OK', '').replace('_OFF', '');
+                        arduinoStatusDisplay.textContent = `🟢 Arduino Connected - Mode: ${mode}`;
+                    } else {
+                        arduinoStatusDisplay.textContent = `🟡 Arduino Connected - Awaiting Mode`;
+                    }
+                    
+                    // Update which button is shown as active based on the response
+                    Object.values(buttons).forEach(btn => btn.classList.remove('active-btn'));
+                    if (status === 'GLIDE_OK') {
+                        buttons.glide.classList.add('active-btn');
+                        currentActiveButtonId = 'glide';
+                    } else if (status === 'CIRCLE_OFF') {
+                        buttons.circle.classList.add('active-btn');
+                        currentActiveButtonId = 'circle';
+                    }
+                })
+                .catch(e => {
+                    console.error('Arduino Status fetch error:', e);
+                    arduinoStatusDisplay.textContent = `🔴 Status failed`;
+                });
+            
+            // Continue polling
             setTimeout(updateArduinoStatus, 300);
         }
 
@@ -866,6 +876,7 @@
             togglePanel('speed-panel');
             
             fetchDashboardData();
+            // Start the first status poll
             updateArduinoStatus();
         };
     </script>
