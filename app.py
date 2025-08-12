@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 STM32 LED Control Flask Backend
-Handles web interface requests and STM32 USB serial communication
+Handles web interface requests and STM32 USB serial communication.
+This version includes corrected routing to properly serve the web UI.
 """
 
 import os
@@ -64,27 +65,30 @@ class STM32SerialManager:
                     logger.info(f"Found STM32 device: {port.device} - {port.description}")
                     return port.device
                     
-        # Fallback: try common USB serial ports
-        common_ports = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyUSB0', '/dev/ttyUSB1']
-        for port in common_ports:
-            if os.path.exists(port):
-                logger.info(f"Trying common port: {port}")
-                return port
+        # Fallback for common ports
+        common_ports = ['/dev/ttyACM0', '/dev/ttyACM1', '/dev/ttyUSB0', '/dev/ttyUSB1', 'COM3', 'COM4', 'COM9']
+        for port_path in common_ports:
+            try:
+                # Try to open the port to check if it exists and is available
+                s = serial.Serial(port_path)
+                s.close()
+                logger.info(f"Found available common port: {port_path}")
+                return port_path
+            except (OSError, serial.SerialException):
+                pass
                 
         return None
     
     def connect(self) -> bool:
         """Establish serial connection to STM32"""
         with self.lock:
+            if self.is_connected:
+                return True
             try:
-                if self.is_connected:
-                    return True
-                    
                 if not self.port_path:
                     self.port_path = self.find_stm32_port()
-                    
                 if not self.port_path:
-                    logger.error("No STM32 device found")
+                    logger.error("No STM32 device found.")
                     return False
                 
                 self.serial_port = serial.Serial(
@@ -96,24 +100,16 @@ class STM32SerialManager:
                     parity=self.config.parity,
                     stopbits=self.config.stopbits
                 )
-                
-                # Clear any pending data
-                self.serial_port.flushInput()
-                self.serial_port.flushOutput()
-                
-                # Test connection with ping
-                time.sleep(0.1)  # Allow STM32 to stabilize
-                
+                time.sleep(2.0) # Wait for the connection to stabilize
                 self.is_connected = True
                 logger.info(f"Connected to STM32 on {self.port_path}")
                 return True
-                
             except serial.SerialException as e:
                 logger.error(f"Serial connection failed: {e}")
                 self.cleanup()
                 return False
             except Exception as e:
-                logger.error(f"Unexpected error during connection: {e}")
+                logger.error(f"An unexpected error occurred during connection: {e}")
                 self.cleanup()
                 return False
     
@@ -121,245 +117,133 @@ class STM32SerialManager:
         """Safely disconnect from STM32"""
         with self.lock:
             self.cleanup()
-            logger.info("Disconnected from STM32")
     
     def cleanup(self):
         """Clean up serial resources"""
-        self.is_connected = False
-        if self.serial_port:
+        if self.serial_port and self.serial_port.is_open:
             try:
                 self.serial_port.close()
-            except:
-                pass
-            self.serial_port = None
+            except Exception as e:
+                logger.error(f"Error closing serial port: {e}")
+        self.serial_port = None
+        self.is_connected = False
+        self.port_path = None # Reset port path to allow re-detection
+        logger.info("Serial connection cleaned up.")
     
     def send_command(self, command: str, max_retries: int = 3) -> Dict[str, Any]:
-        """Send command to STM32 with retry logic and exponential backoff"""
+        """Send command to STM32 with retry logic"""
         for attempt in range(max_retries):
             try:
                 with self.lock:
-                    # Ensure connection
-                    if not self.is_connected:
-                        if not self.connect():
-                            raise serial.SerialException("Failed to establish connection")
+                    if not self.is_connected and not self.connect():
+                        raise serial.SerialException("Connection to STM32 is not available.")
                     
-                    # Send command
                     cmd_bytes = (command + '\n').encode('utf-8')
                     self.serial_port.write(cmd_bytes)
                     self.serial_port.flush()
                     
-                    # Read response with timeout
                     response = self.serial_port.readline().decode('utf-8').strip()
-                    
                     if not response:
-                        raise serial.SerialTimeoutException("No response from STM32")
+                        raise serial.SerialTimeoutException("No response from STM32.")
                     
-                    # Validate response
-                    expected_responses = {
-                        'GLIDE_ON': 'OK_ON',
-                        'CIRCLE_OFF': 'OK_OFF'
-                    }
-                    
-                    expected = expected_responses.get(command)
-                    if expected and response != expected:
-                        raise ValueError(f"Invalid response: got '{response}', expected '{expected}'")
-                    
-                    # Parse LED state from response
-                    led_state = response == 'OK_ON'
-                    
-                    logger.info(f"Command '{command}' successful, LED state: {led_state}")
-                    return {
-                        'success': True,
-                        'response': response,
-                        'led_state': led_state,
-                        'attempt': attempt + 1
-                    }
-                    
+                    logger.info(f"Command '{command}' sent, response: '{response}'")
+                    return {'success': True, 'response': response, 'led_state': (response == 'OK_ON')}
             except (serial.SerialException, serial.SerialTimeoutException, ValueError) as e:
-                logger.warning(f"Attempt {attempt + 1} failed: {e}")
-                self.cleanup()  # Force reconnection on next attempt
-                
+                logger.warning(f"Attempt {attempt + 1} failed: {e}. Cleaning up connection.")
+                self.cleanup() # Force reconnection on the next attempt
                 if attempt < max_retries - 1:
-                    delay = min(2 ** attempt, 8)  # Exponential backoff, max 8 seconds
-                    logger.info(f"Retrying in {delay} seconds...")
-                    time.sleep(delay)
+                    time.sleep(self.retry_delay * (attempt + 1)) # Wait before retrying
                 else:
-                    logger.error(f"Command '{command}' failed after {max_retries} attempts")
-                    return {
-                        'success': False,
-                        'error': str(e),
-                        'attempt': attempt + 1
-                    }
-            except Exception as e:
-                logger.error(f"Unexpected error: {e}")
-                self.cleanup()
-                return {
-                    'success': False,
-                    'error': f"Unexpected error: {str(e)}",
-                    'attempt': attempt + 1
-                }
-        
+                    logger.error(f"Command '{command}' failed after {max_retries} attempts.")
+                    return {'success': False, 'error': str(e)}
         return {'success': False, 'error': 'Max retries exceeded'}
 
 class LEDControlServer:
     """Main Flask application for LED control"""
     
     def __init__(self):
+        # This tells Flask to look for the 'templates' and 'static' folders
+        # in the same directory as the script, which matches your folder structure.
         self.app = Flask(__name__)
         
-        # Configure CORS for local network access only
-        CORS(self.app, origins=[
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "http://192.168.*.*:*",
-            "http://10.*.*.*:*"
-        ])
+        CORS(self.app) # Allow all origins for simplicity in local development
         
         self.serial_manager = STM32SerialManager(SerialConfig())
-        self.led_state = False
+        self.led_state = False # Default state
         self.setup_routes()
         
-        # Attempt initial connection
-        self.serial_manager.connect()
+        threading.Thread(target=self.serial_manager.connect, daemon=True).start()
     
     def setup_routes(self):
         """Configure Flask routes"""
         
         @self.app.route('/')
         def index():
-            """Serve the main web interface"""
+            # Serves the main HTML file from the 'templates' folder.
             return render_template('index.html')
         
-        # Route to handle the GLIDE and CIRCLE commands from the HTML
-        @self.app.route('/<command>')
-        def control_led(command):
-            """Handle LED control commands"""
-            try:
-                # Map commands from HTML to STM32 protocol strings
-                command_map = {
-                    'glide': 'GLIDE_ON',
-                    'circle': 'CIRCLE_OFF'
-                }
-                
-                stm32_command = command_map.get(command.lower())
-                
-                if stm32_command:
-                    logger.info(f"Received command from web: '{command}'. Mapping to '{stm32_command}'")
-                    result = self.serial_manager.send_command(stm32_command)
-                    
-                    if result['success']:
-                        return "OK_ON" if stm32_command == 'GLIDE_ON' else "OK_OFF"
-                    else:
-                        return f"Error: {result['error']}", 503
-                else:
-                    return f"Error: Invalid command '{command}'", 400
-                    
-            except Exception as e:
-                logger.error(f"Control endpoint error: {e}")
-                return "Internal server error", 500
-        
-        # ADDED: Placeholder routes for dashboard data
-        @self.app.route('/speed')
-        def get_speed():
-            return jsonify({'speed': 85})
+        # This single route handles all commands and data requests from the frontend.
+        @self.app.route('/<string:endpoint>')
+        def handle_requests(endpoint):
+            """Handles all API requests from the frontend."""
+            command_map = {'glide': 'GLIDE_ON', 'circle': 'CIRCLE_OFF'}
+            
+            # Handle dashboard data endpoints
+            if endpoint == 'speed':
+                return jsonify({'speed': 85})
+            elif endpoint == 'motor_temperature':
+                return jsonify({'temperature': 70})
+            elif endpoint == 'battery_temperature':
+                return jsonify({'temperature': 45})
+            elif endpoint == 'battery_availability':
+                return jsonify({'availability': 92})
+            elif endpoint == 'status':
+                 return "GLIDE_OK" if self.led_state else "CIRCLE_OFF"
 
-        @self.app.route('/motor_temperature')
-        def get_motor_temperature():
-            return jsonify({'temperature': 70})
+            # Handle STM32 commands
+            stm32_command = command_map.get(endpoint.lower())
+            if not stm32_command:
+                # If the endpoint is not a known command or data endpoint, return 404
+                return jsonify({'error': 'Invalid endpoint'}), 404
 
-        @self.app.route('/battery_temperature')
-        def get_battery_temperature():
-            return jsonify({'temperature': 45})
-
-        @self.app.route('/battery_availability')
-        def get_battery_availability():
-            return jsonify({'availability': 92})
-        # END ADDED SECTION
-
-        @self.app.route('/health', methods=['GET'])
-        def health_check():
-            """System health monitoring endpoint"""
-            try:
-                # Check serial connection status
-                is_connected = self.serial_manager.is_connected
-                
-                # Attempt to reconnect if disconnected
-                if not is_connected:
-                    is_connected = self.serial_manager.connect()
-                
-                return jsonify({
-                    'status': 'healthy' if is_connected else 'degraded',
-                    'serial_connected': is_connected,
-                    'led_state': self.led_state,
-                    'port': self.serial_manager.port_path,
-                    'timestamp': time.time()
-                })
-                
-            except Exception as e:
-                logger.error(f"Health check error: {e}")
-                return jsonify({
-                    'status': 'unhealthy',
-                    'serial_connected': False,
-                    'error': str(e),
-                    'timestamp': time.time()
-                }), 500
-        
-        @self.app.route('/status', methods=['GET'])
-        def get_status():
-            """Get current LED status"""
-            # We don't have a direct status from Arduino, so we'll simulate based on the last command
-            return "GLIDE_OK" if self.led_state else "CIRCLE_OFF"
-        
+            result = self.serial_manager.send_command(stm32_command)
+            if result.get('success'):
+                self.led_state = result['led_state']
+                # Return the raw response from the STM32 (e.g., "OK_ON" or "OK_OFF")
+                return result['response'], 200
+            else:
+                return jsonify({'error': result.get('error', 'Command failed')}), 503
+            
+        # --- Error Handlers ---
         @self.app.errorhandler(404)
         def not_found(error):
-            return jsonify({'error': 'Endpoint not found'}), 404
-        
-        @self.app.errorhandler(500)
-        def internal_error(error):
-            return jsonify({'error': 'Internal server error'}), 500
+            return jsonify({'error': 'Not Found'}), 404
     
-    def run(self, host='0.0.0.0', port=5000, debug=False):
+    def run(self, host='0.0.0.0', port=5000):
         """Run the Flask server"""
         try:
-            if debug:
-                self.app.run(host=host, port=port, debug=True, threaded=True)
-            else:
-                # Production WSGI server
-                server = make_server(host, port, self.app, threaded=True)
-                logger.info(f"Starting production server on {host}:{port}")
-                server.serve_forever()
+            logger.info(f"Starting server on http://{host}:{port}")
+            server = make_server(host, port, self.app, threaded=True)
+            server.serve_forever()
         except KeyboardInterrupt:
             logger.info("Server shutting down...")
-        except Exception as e:
-            logger.error(f"Server error: {e}")
         finally:
             self.cleanup()
     
     def cleanup(self):
-        """Clean up resources"""
+        """Clean up resources on shutdown"""
         self.serial_manager.disconnect()
 
 def main():
     """Main entry point"""
     import argparse
-    
     parser = argparse.ArgumentParser(description='STM32 LED Control Server')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to')
     parser.add_argument('--port', type=int, default=5000, help='Port to bind to')
-    parser.add_argument('--debug', action='store_true', help='Run in debug mode')
-    
     args = parser.parse_args()
     
     server = LEDControlServer()
-    
-    try:
-        logger.info("STM32 LED Control Server starting...")
-        logger.info(f"Web interface will be available at http://{args.host}:{args.port}")
-        server.run(host=args.host, port=args.port, debug=args.debug)
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
-    except Exception as e:
-        logger.error(f"Failed to start server: {e}")
+    server.run(host=args.host, port=args.port)
 
 if __name__ == '__main__':
     main()
