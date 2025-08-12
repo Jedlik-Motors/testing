@@ -20,7 +20,7 @@
             --warning-color: #ffcc00;
 
             /* Dashboard Specific Colors */
-            --dashboard-panel-bg: rgba(10, 10, 12, 0.9); /* Background for the dashboard panel itself */
+            --dashboard-panel-bg: rgba(10, 10, 12, 0.9);
             --dashboard-border: #00e6ff;
             --dashboard-shadow-outer: rgba(0, 230, 255, 0.6);
             --dashboard-shadow-inner: rgba(255, 255, 255, 0.15);
@@ -29,7 +29,7 @@
             --metric-shadow: rgba(0, 230, 255, 0.2);
             --value-text-shadow: rgba(255, 255, 255, 0.2);
 
-            /* Button Specific Colors (Left Panel) */
+            /* Button Specific Colors (Controls Panel) */
             --btn-bg-start: #2a2a2e;
             --btn-bg-end: #1f1f22;
             --btn-border: #00d4ff;
@@ -59,6 +59,15 @@
             --theme-toggle-border-dark: #00d4ff;
             --theme-toggle-shadow-dark: rgba(0, 212, 255, 0.4);
             --theme-toggle-bg-dark: rgba(255, 255, 255, 0.08);
+
+            /* Tab/Option Button Styles */
+            --tab-bg-color: rgba(25, 25, 28, 0.85);
+            --tab-border-color: rgba(0, 212, 255, 0.2);
+            --tab-shadow-color: rgba(0, 212, 255, 0.3);
+            --tab-text-color: #b0e0e6;
+            --tab-active-bg: rgba(0, 212, 255, 0.2);
+            --tab-active-border: #00d4ff;
+            --tab-active-text-color: #00d4ff;
         }
 
         /* Light theme overrides */
@@ -68,7 +77,7 @@
             --bg-end: #e0f0ff;
             --main-text-color: #1c2a3a;
             --sub-text-color: #5a7d9a;
-            --highlight-color: #007bff; /* Classic Bootstrap Blue for highlights */
+            --highlight-color: #007bff;
             --danger-color: #dc3545;
             --success-color: #28a745;
             --warning-color: #ffc107;
@@ -83,7 +92,7 @@
             --metric-shadow: rgba(0, 0, 0, 0.08);
             --value-text-shadow: rgba(0, 0, 0, 0.1);
 
-            /* Button Specific Colors (Left Panel) */
+            /* Button Specific Colors (Controls Panel) */
             --btn-bg-start: #e0e0e0;
             --btn-bg-end: #f0f0f0;
             --btn-border: #cccccc;
@@ -113,27 +122,28 @@
             --theme-toggle-border-light: #007bff;
             --theme-toggle-shadow-light: rgba(0, 123, 255, 0.3);
             --theme-toggle-bg-light: rgba(0, 0, 0, 0.05);
+
+            /* Tab/Option Button Styles */
+            --tab-bg-color: #f5faff;
+            --tab-border-color: #b0e0e6;
+            --tab-shadow-color: rgba(0, 0, 0, 0.1);
+            --tab-text-color: #5a7d9a;
+            --tab-active-bg: #e0f0ff;
+            --tab-active-border: #007bff;
+            --tab-active-text-color: #007bff;
         }
 
         /* Keyframe animations */
         @keyframes pulse-border {
-            0% { box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner); } /* Softer pulse */
+            0% { box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner); }
             50% { box-shadow: 0 0 45px var(--dashboard-shadow-outer), inset 0 0 22px var(--dashboard-shadow-inner); }
             100% { box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner); }
         }
-
         @keyframes text-glow {
-            0% { text-shadow: 0 0 4px var(--highlight-color); } /* Softer glow */
+            0% { text-shadow: 0 0 4px var(--highlight-color); }
             50% { text-shadow: 0 0 12px var(--highlight-color), 0 0 20px var(--highlight-color); }
             100% { text-shadow: 0 0 4px var(--highlight-color); }
         }
-
-        @keyframes title-pulse {
-            0% { text-shadow: 0 0 6px var(--highlight-color); }
-            50% { text-shadow: 0 0 14px var(--highlight-color), 0 0 25px var(--highlight-color); }
-            100% { text-shadow: 0 0 6px var(--highlight-color); }
-        }
-
         @keyframes border-scan {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
@@ -145,7 +155,6 @@
             padding: 0;
             overflow: hidden;
         }
-
         body {
             font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at center, var(--bg-start) 0%, var(--bg-end) 100%);
@@ -156,151 +165,183 @@
             transition: background 0.5s ease, color 0.5s ease;
         }
 
-        /* Main layout container for the split view */
-        .main-split-container {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        /* Left Panel: Arduino Controls */
-        .left-panel {
-            flex: 1; /* Takes half the width */
+        /* Main layout container for the single panel view */
+        .main-panel-container {
+            position: relative;
+            width: 1024px; /* Fixed width */
+            height: 600px; /* Fixed height */
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Aligns content to the top */
+            justify-content: flex-start; /* Align content to the top */
             align-items: center;
             padding: 20px;
-            padding-top: 5vh;
-            background: radial-gradient(circle at center, var(--bg-start) 0%, var(--bg-end) 100%);
-            transition: background 0.5s ease;
-            box-sizing: border-box; /* Include padding in width/height */
+            box-sizing: border-box;
+            background: var(--dashboard-panel-bg);
+            border-radius: 25px;
+            border: 3px solid var(--dashboard-border);
+            box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner);
+            animation: pulse-border 5s infinite alternate ease-in-out;
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, backdrop-filter 0.5s ease;
+            backdrop-filter: blur(15px);
+        }
+        body.light-theme .main-panel-container {
+            background: var(--dashboard-panel-bg);
+            border-color: var(--dashboard-border);
+            box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner);
         }
 
-        .left-panel .controls {
+        /* Tab/Option Buttons Container */
+        .tab-controls {
             display: flex;
-            flex-direction: column; /* Arrange buttons vertically */
-            gap: 40px; /* Space between buttons */
-            align-items: center; /* Center buttons horizontally */
-            flex-grow: 1; /* Allows controls to take available space */
-            justify-content: center; /* Centers buttons vertically within this flex item */
-            padding: 20px;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--tab-text-color);
+            background: var(--tab-bg-color);
+            border: 2px solid var(--tab-border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--tab-shadow-color);
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--tab-shadow-color);
+        }
+        .tab-btn.active {
+            background: var(--tab-active-bg);
+            color: var(--tab-active-text-color);
+            border-color: var(--tab-active-border);
+            box-shadow: 0 0 15px var(--tab-active-border);
+            pointer-events: none;
         }
 
-        .left-panel .btn {
-            width: 200px; /* Increased size for circular buttons */
-            height: 200px; /* Increased size for circular buttons */
-            border-radius: 50%; /* Make them circular */
+        /* Content Panels */
+        .content-panel {
+            width: 100%;
+            height: calc(100% - 100px); /* Adjust height to fit below tabs and logo */
+            display: none; /* Hide by default */
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            position: relative; /* For the status message */
+        }
+        .content-panel.active {
+            display: flex; /* Show active panel */
+            flex-direction: column;
+        }
+
+        /* Arduino Controls Panel Styling */
+        #arduino-panel {
+            justify-content: center;
+            gap: 40px;
+            /* No need for padding-top here as buttons are centered vertically */
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+        }
+        .btn {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
             background: linear-gradient(145deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
             border: 2px solid var(--btn-border);
-            box-shadow: 0 0 15px var(--btn-shadow-outer), inset 0 2px 5px var(--btn-shadow-inset);
+            box-shadow: 0 0 12px var(--btn-shadow-outer), inset 0 2px 4px var(--btn-shadow-inset);
+            backdrop-filter: blur(8px);
             display: flex;
-            flex-direction: column; /* Icon stacked above text */
+            flex-direction: column;
             align-items: center;
-            justify-content: center; /* Center content */
+            justify-content: center;
             font-weight: 600;
             color: var(--main-text-color);
-            font-size: 2.2rem; /* Adjusted font size for larger circular button */
+            font-size: 2.2rem;
             transition: all 0.3s ease;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transform-style: preserve-3d;
-            text-align: center; /* Ensure text is centered */
-            line-height: 1.2; /* Adjust line height for stacked text */
+            text-align: center;
+            line-height: 1.2;
         }
-        .left-panel .btn svg {
-            width: 80px; /* Increased icon size for larger circular button */
-            height: 80px;
-            margin-bottom: 15px; /* Space between icon and text */
-            margin-right: 0; /* Remove right margin */
-            stroke: currentColor; /* Use current text color for SVG */
-            filter: drop-shadow(0 0 8px var(--icon-shadow));
+        .btn svg {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 12px;
+            stroke: currentColor;
+            filter: drop-shadow(0 0 6px var(--icon-shadow));
             transition: stroke 0.3s ease, transform 0.3s ease, filter 0.3s ease;
         }
-        .left-panel .btn:hover {
-            transform: translateY(-5px) scale(1.02); /* Subtle lift and scale */
-            box-shadow: 0 10px 20px var(--btn-hover-shadow-outer), inset 0 3px 6px var(--btn-hover-shadow-inset); /* Softer hover shadow */
+        .btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 20px var(--btn-hover-shadow-outer), inset 0 3px 6px var(--btn-hover-shadow-inset);
             background: linear-gradient(145deg, var(--btn-hover-bg-start) 0%, var(--btn-hover-bg-end) 100%);
             color: var(--btn-hover-text);
             border-color: var(--btn-hover-border);
         }
-        .left-panel .btn:hover svg {
+        .btn:hover svg {
             transform: scale(1.1) rotate(5deg);
             stroke: var(--icon-hover-color);
-            filter: drop-shadow(0 0 10px var(--icon-hover-shadow)); /* Softer hover glow */
+            filter: drop-shadow(0 0 10px var(--icon-hover-shadow));
         }
-        .left-panel .btn.active-btn {
+        .btn.active-btn {
             background: linear-gradient(145deg, var(--btn-active-bg-start) 0%, var(--btn-active-bg-end) 100%);
             border-color: var(--btn-active-border);
-            box-shadow: 0 0 12px var(--btn-active-shadow-outer), inset 0 0 6px var(--btn-active-shadow-inset); /* Softer active shadow */
+            box-shadow: 0 0 12px var(--btn-active-shadow-outer), inset 0 0 6px var(--btn-active-shadow-inset);
             color: var(--btn-active-text);
             pointer-events: none;
         }
-        .left-panel .btn.active-btn svg {
+        .btn.active-btn svg {
             stroke: var(--btn-active-text);
             filter: drop-shadow(0 0 6px var(--btn-active-shadow-outer));
         }
-        .left-panel .arduino-connected {
+        #arduino-status {
             font-size: 1.5rem;
             color: var(--arduino-connected-color);
             text-align: center;
             margin-top: 20px;
             font-weight: 500;
-            text-shadow: 0 0 6px var(--arduino-connected-shadow); /* Softer text shadow */
+            text-shadow: 0 0 6px var(--arduino-connected-shadow);
         }
-
-        /* Right Panel: Digital Dashboard */
-        .right-panel {
-            flex: 1; /* Takes half the width */
-            display: flex;
+        
+        /* Dashboard Panel Styling */
+        #dashboard-panel {
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-            background: radial-gradient(circle at center, var(--bg-start) 0%, var(--bg-end) 100%); /* Match body background */
-            transition: background 0.5s ease;
-        }
-
-        .dashboard-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: var(--dashboard-panel-bg); /* Use dashboard-panel-bg for this container */
+            background: var(--dashboard-panel-bg);
             border-radius: 25px;
             border: 3px solid var(--dashboard-border);
-            box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner); /* Softer shadow */
+            box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner);
             animation: pulse-border 5s infinite alternate ease-in-out;
-            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-            backdrop-filter: blur(15px); /* Primary glassmorphic effect */
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, backdrop-filter 0.5s ease;
+            backdrop-filter: blur(15px);
         }
-        body.light-theme .dashboard-container {
-            /* background-image removed for light theme too */
-        }
-
+        
         /* Metric Display General Styling */
         .metric-display {
             width: 90%;
             max-width: 800px;
             height: auto;
-            padding: 20px 40px; /* Adjusted padding for all metric displays */
-            margin-bottom: 20px; /* Space between metric displays */
+            padding: 20px 40px;
+            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border-width: 3px;
-            background: var(--metric-bg); /* More transparent */
+            background: var(--metric-bg);
             border-radius: 15px;
             border: 2px solid var(--metric-border);
-            box-shadow: 0 0 12px var(--metric-shadow), inset 0 0 6px rgba(255,255,255,0.03); /* Softer shadow */
+            box-shadow: 0 0 12px var(--metric-shadow), inset 0 0 6px rgba(255,255,255,0.03);
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(10px); /* Glassmorphic effect */
+            backdrop-filter: blur(10px);
             transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, backdrop-filter 0.5s ease;
         }
         .metric-display::before, .metric-display::after {
@@ -313,7 +354,6 @@
         .metric-display::before { top: 0; left: 0; width: 100%; transform: translateX(-100%); }
         .metric-display::after { bottom: 0; right: 0; width: 100%; transform: translateX(100%); animation-direction: reverse; }
 
-
         .metric-label {
             font-family: 'Inter', sans-serif;
             font-size: 1.2rem;
@@ -325,43 +365,40 @@
         }
         .metric-value {
             font-family: 'Orbitron', sans-serif;
-            font-size: 10rem; /* Default for speed */
+            font-size: 10rem;
             font-weight: 700;
             color: var(--main-text-color);
             line-height: 1;
             display: flex;
             align-items: center;
             gap: 10px;
-            text-shadow: 0 0 15px var(--value-text-shadow); /* Softer text shadow */
+            text-shadow: 0 0 20px var(--value-text-shadow);
         }
         .metric-unit {
-            font-size: 3rem; /* Default for speed */
+            font-size: 3rem;
             color: var(--highlight-color);
             font-weight: 400;
             margin-top: 5px;
             text-transform: uppercase;
         }
 
-        /* Specific overrides for smaller metrics */
-        .metric-display.small-metric {
-            flex: 1;
-            min-width: 150px;
-            height: 130px;
-            padding: 10px;
-            margin-bottom: 0;
+        .speed-metric-display {
+            padding: 40px;
+            margin-bottom: 20px;
         }
-        .metric-display.small-metric .metric-value {
-            font-size: 2rem;
+        .speed-metric-display.active {
+            --metric-bg: rgba(0, 150, 0, 0.5);
+            --metric-border: #00ff00;
+            --metric-shadow: rgba(0, 255, 0, 0.3);
+            --highlight-color: #00ff00;
         }
-        .metric-display.small-metric .metric-unit {
-            font-size: 1.1rem;
-        }
-        .metric-display.small-metric .icon {
-            width: 1.5rem;
-            height: 1.5rem;
+        body.light-theme .speed-metric-display.active {
+            --metric-bg: rgba(144, 238, 144, 0.7);
+            --metric-border: #32cd32;
+            --metric-shadow: rgba(50, 205, 50, 0.2);
+            --highlight-color: #32cd32;
         }
 
-        /* Container for Motor Temp, Battery Temp, and Battery Availability */
         .bottom-metrics-container {
             display: flex;
             flex-direction: row;
@@ -384,7 +421,24 @@
             box-shadow: none;
         }
 
-        /* Battery Visual specific styles */
+        .metric-display.small-metric {
+            flex: 1;
+            min-width: 150px;
+            height: 130px;
+            padding: 10px;
+            margin-bottom: 0;
+        }
+        .metric-display.small-metric .metric-value {
+            font-size: 2rem;
+        }
+        .metric-display.small-metric .metric-unit {
+            font-size: 1.1rem;
+        }
+        .metric-display.small-metric .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
         .battery-visual-container {
             display: flex;
             align-items: center;
@@ -423,7 +477,6 @@
         .battery-fill.orange { background-color: var(--warning-color); }
         .battery-fill.red { background-color: var(--danger-color); }
 
-        /* Theme Toggle Button */
         .theme-toggle {
             position: fixed;
             top: 20px;
@@ -462,7 +515,6 @@
             box-shadow: 0 0 20px var(--theme-toggle-shadow-light);
         }
 
-        /* Logo Styling */
         .logo-container {
             position: fixed;
             top: 20px;
@@ -476,53 +528,44 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 1024px) {
-            .main-split-container {
+            .main-panel-container {
+                width: 100vw;
+                height: 100vh;
+            }
+            .tab-controls {
                 flex-direction: column;
+                gap: 10px;
+                margin-bottom: 10px;
             }
-            .left-panel, .right-panel {
-                flex: 1 1 50vh;
-                height: 50vh;
-                padding: 15px;
-                padding-top: 5vh;
+            .tab-btn {
+                font-size: 1rem;
             }
-            .left-panel .controls {
+            #arduino-panel .controls {
                 gap: 20px;
+                grid-template-columns: 1fr;
             }
-            .left-panel .btn {
+            #arduino-panel .btn {
                 width: 140px;
                 height: 140px;
                 font-size: 1.6rem;
                 backdrop-filter: blur(6px);
             }
-            .left-panel .btn svg {
+            #arduino-panel .btn svg {
                 width: 55px;
                 height: 55px;
-                margin-bottom: 10px;
             }
-            .left-panel .arduino-connected {
+            #arduino-status {
                 font-size: 1.2rem;
-                margin-top: 15px;
             }
-            .dashboard-container {
-                padding: 15px;
-                backdrop-filter: blur(10px);
+            #speed-panel .metric-display {
+                padding: 20px;
             }
-            .speed-metric-display {
-                padding: 30px;
-                margin-bottom: 15px;
-                backdrop-filter: blur(8px);
+            #speed-panel .speed-metric-display .metric-value {
+                font-size: 5rem;
             }
-            .speed-metric-display .metric-value {
-                font-size: 7rem;
-            }
-            .speed-metric-display .metric-unit {
-                font-size: 2.5rem;
-            }
-            .speed-metric-display .metric-value .icon {
-                width: 3rem;
-                height: 3rem;
+            #speed-panel .speed-metric-display .metric-unit {
+                font-size: 2rem;
             }
             .bottom-metrics-container {
                 flex-direction: column;
@@ -585,7 +628,6 @@
                 padding-top: 2vh;
             }
             .left-panel .controls {
-                grid-template-columns: 1fr;
                 gap: 15px;
             }
             .left-panel .btn {
@@ -601,19 +643,14 @@
             .left-panel .arduino-connected {
                 font-size: 1rem;
             }
-            .speed-metric-display .metric-value {
-                font-size: 5rem;
+            #speed-panel .speed-metric-display .metric-value {
+                font-size: 4rem;
             }
-            .speed-metric-display .metric-unit {
-                font-size: 1.8rem;
-            }
-            .speed-metric-display .metric-value .icon {
-                width: 2.5rem;
-                height: 2.5rem;
+            #speed-panel .speed-metric-display .metric-unit {
+                font-size: 1.5rem;
             }
             .bottom-metrics-container {
                 gap: 10px;
-                padding: 0;
             }
             .metric-display.small-metric {
                 height: 100px;
@@ -658,13 +695,61 @@
     </button>
 
     <div class="logo-container">
-        <img id="blackLogo" src="/static/Jedlik-logo-white_00.png" alt="Jedlik Logo Black" class="theme-logo">
-        <img id="whiteLogo" src="/static/Jedlik-logo-black_00.png" alt="Jedlik Logo White" class="theme-logo" style="display: none;">
+        <img id="blackLogo" src="/static/Jedlik-logo-black_00.png" alt="Jedlik Logo Black" class="theme-logo">
+        <img id="whiteLogo" src="/static/Jedlik-logo-white_00.png" alt="Jedlik Logo White" class="theme-logo" style="display: none;">
     </div>
 
-    <div class="main-split-container">
-        <!-- Left Half: Arduino LED Control Panel -->
-        <div class="left-panel">
+    <div class="main-panel-container">
+        <!-- Tab/Option Buttons Container -->
+        <div class="tab-controls">
+            <button class="tab-btn active" id="speed-tab-btn">SPEEDOMETER</button>
+            <button class="tab-btn" id="steering-tab-btn">STEERING</button>
+        </div>
+
+        <!-- Speedometer Panel (Initially active) -->
+        <div class="content-panel active" id="speed-panel">
+            <div class="metric-display speed-metric-display">
+                <div class="metric-label">SPEED</div>
+                <div class="metric-value" id="speedValue">
+                    0
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <div class="metric-unit">km/h</div>
+            </div>
+            <!-- Battery and Temp in a fixed position at the bottom -->
+            <div class="bottom-metrics-container absolute bottom-4 w-full px-8">
+                <!-- Motor Temperature Section -->
+                <div class="metric-display small-metric">
+                    <div class="metric-label">MOTOR TEMP</div>
+                    <div class="metric-value" id="motorTemperatureValue">0</div>
+                    <div class="metric-unit">°C</div>
+                </div>
+
+                <!-- Battery Temperature Section -->
+                <div class="metric-display battery-metric-temp small-metric">
+                    <div class="metric-label">BATTERY TEMP</div>
+                    <div class="metric-value" id="batteryTemperatureValue">0</div>
+                    <div class="metric-unit">°C</div>
+                </div>
+
+                <!-- Battery Availability Section -->
+                <div class="metric-display battery-metric-avail small-metric">
+                    <div class="metric-label">BATTERY</div>
+                    <div class="battery-visual-container">
+                        <div class="battery-outer">
+                            <div class="battery-fill" id="batteryLevelFill"></div>
+                        </div>
+                        <div class="battery-terminal"></div>
+                    </div>
+                    <div class="metric-unit">%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arduino Controls Panel (Initially hidden) -->
+        <div class="content-panel" id="steering-panel">
             <div class="controls">
                 <div class="btn" id="glide">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -679,80 +764,23 @@
                     CIRCLE
                 </div>
             </div>
-
             <div class="arduino-connected" id="arduino-status">
                 🟢 Arduino Connected
-            </div>
-        </div>
-
-        <!-- Right Half: Digital Dashboard Panel -->
-        <div class="right-panel">
-            <div class="dashboard-container">
-                <!-- Speedometer Section (Central and Dominant) -->
-                <div class="metric-display speed-metric-display">
-                    <div class="metric-label">SPEED</div>
-                    <div class="metric-value" id="speedValue">
-                        0
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                    </div>
-                    <div class="metric-unit">km/h</div>
-                </div>
-
-                <!-- Container for Motor Temp, Battery Temp, and Battery Availability - Horizontal Layout -->
-                <div class="bottom-metrics-container">
-                    <!-- Motor Temperature Section -->
-                    <div class="metric-display small-metric" id="motorTempDisplay">
-                        <div class="metric-label">MOTOR TEMP</div>
-                        <div class="metric-value" id="motorTemperatureValue">
-                            0
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="metric-unit">°C</div>
-                    </div>
-
-                    <!-- Battery Temperature Section -->
-                    <div class="metric-display battery-metric-temp small-metric">
-                        <div class="metric-label">BATTERY TEMP</div>
-                        <div class="metric-value" id="batteryTemperatureValue">
-                            0
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="metric-unit">°C</div>
-                    </div>
-
-                    <!-- Battery Availability Section -->
-                    <div class="metric-display battery-metric-avail small-metric">
-                        <div class="metric-label">BATTERY</div>
-                        <div class="battery-visual-container">
-                            <div class="battery-outer">
-                                <div class="battery-fill" id="batteryLevelFill"></div>
-                            </div>
-                            <div class="battery-terminal"></div>
-                        </div>
-                        <div class="metric-unit">%</div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // IMPORTANT: When running this as a standalone HTML file (not served by a web server),
-        // the fetch calls will fail due to browser security restrictions (CORS).
-        // To see data, you need a backend server (like Flask) providing /speed, /battery_temperature,
-        // /battery_availability, and /status, and /motor_temperature endpoints.
-        // For local testing with a Flask server, ensure FLASK_BASE_URL matches your server's address.
-        const FLASK_BASE_URL = 'http://127.0.0.1:5000'; 
+        const FLASK_BASE_URL = 'http://127.0.0.1:5000';
+        
+        // Tab buttons and content panels
+        const speedTabBtn = document.getElementById('speed-tab-btn');
+        const steeringTabBtn = document.getElementById('steering-tab-btn');
+        const speedPanel = document.getElementById('speed-panel');
+        const steeringPanel = document.getElementById('steering-panel');
 
         // Dashboard Elements
         const speedValueDisplay = document.getElementById('speedValue');
-        const speedMetricDisplay = document.querySelector('.speed-metric-display');
         const motorTemperatureValueDisplay = document.getElementById('motorTemperatureValue');
         const batteryTemperatureValueDisplay = document.getElementById('batteryTemperatureValue');
         const batteryLevelFill = document.getElementById('batteryLevelFill');
@@ -774,12 +802,37 @@
         const blackLogo = document.getElementById('blackLogo');
         const whiteLogo = document.getElementById('whiteLogo');
 
+        // Initial state
+        let isSpeedPanelActive = true;
+
+        /**
+         * Toggles the visibility of the content panels.
+         * @param {string} panelToShow The ID of the panel to make active ('speed-panel' or 'steering-panel').
+         */
+        function togglePanel(panelToShow) {
+            if (panelToShow === 'speed-panel') {
+                speedPanel.classList.add('active');
+                steeringPanel.classList.remove('active');
+                speedTabBtn.classList.add('active');
+                steeringTabBtn.classList.remove('active');
+                isSpeedPanelActive = true;
+            } else {
+                speedPanel.classList.remove('active');
+                steeringPanel.classList.add('active');
+                speedTabBtn.classList.remove('active');
+                steeringTabBtn.classList.add('active');
+                isSpeedPanelActive = false;
+            }
+        }
+
         /**
          * Updates the digital speed display.
          * @param {number} speed The current speed value.
          */
         function updateSpeedDisplay(speed) {
-            speedValueDisplay.firstChild.textContent = Math.round(speed);
+            if (isSpeedPanelActive) {
+                speedValueDisplay.firstChild.textContent = Math.round(speed);
+            }
         }
 
         /**
@@ -787,7 +840,9 @@
          * @param {number} temp The current motor temperature.
          */
         function updateMotorTempDisplay(temp) {
-            motorTemperatureValueDisplay.firstChild.textContent = Math.round(temp);
+            if (isSpeedPanelActive) {
+                motorTemperatureValueDisplay.firstChild.textContent = Math.round(temp);
+            }
         }
 
         /**
@@ -795,7 +850,9 @@
          * @param {number} temp The current battery temperature.
          */
         function updateBatteryTempDisplay(temp) {
-            batteryTemperatureValueDisplay.firstChild.textContent = Math.round(temp);
+            if (isSpeedPanelActive) {
+                batteryTemperatureValueDisplay.firstChild.textContent = Math.round(temp);
+            }
         }
 
         /**
@@ -803,16 +860,18 @@
          * @param {number} availability The current battery percentage.
          */
         function updateBatteryAvailDisplay(availability) {
-            const roundedAvailability = Math.round(availability);
-            batteryLevelFill.style.width = `${roundedAvailability}%`;
+            if (isSpeedPanelActive) {
+                const roundedAvailability = Math.round(availability);
+                batteryLevelFill.style.width = `${roundedAvailability}%`;
 
-            batteryLevelFill.classList.remove('green', 'orange', 'red');
-            if (roundedAvailability >= 60) {
-                batteryLevelFill.classList.add('green');
-            } else if (roundedAvailability >= 20) {
-                batteryLevelFill.classList.add('orange');
-            } else {
-                batteryLevelFill.classList.add('red');
+                batteryLevelFill.classList.remove('green', 'orange', 'red');
+                if (roundedAvailability >= 60) {
+                    batteryLevelFill.classList.add('green');
+                } else if (roundedAvailability >= 20) {
+                    batteryLevelFill.classList.add('orange');
+                } else {
+                    batteryLevelFill.classList.add('red');
+                }
             }
         }
 
@@ -843,13 +902,15 @@
 
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
-                speedValueDisplay.firstChild.textContent = '---';
-                motorTemperatureValueDisplay.firstChild.textContent = '---';
-                batteryTemperatureValueDisplay.firstChild.textContent = '---';
-                batteryLevelFill.style.width = '0%';
-                batteryLevelFill.classList.remove('green', 'orange', 'red');
+                if (isSpeedPanelActive) {
+                    speedValueDisplay.firstChild.textContent = '---';
+                    motorTemperatureValueDisplay.firstChild.textContent = '---';
+                    batteryTemperatureValueDisplay.firstChild.textContent = '---';
+                    batteryLevelFill.style.width = '0%';
+                    batteryLevelFill.classList.remove('green', 'orange', 'red');
+                }
             }
-            setTimeout(fetchDashboardData, 1000); // Poll every 1 second
+            setTimeout(fetchDashboardData, 1000);
         }
 
         /**
@@ -868,14 +929,14 @@
                     .then(response => {
                         if (!response.ok) {
                             console.error('Command failed to send to Flask. Status:', response.status);
-                            arduinoStatusDisplay.textContent = `🔴 Status failed`; // Simplified error message
+                            arduinoStatusDisplay.textContent = `🔴 Status failed`;
                         } else {
                             updateArduinoStatus();
                         }
                     })
                     .catch(e => {
                         console.error('Fetch error sending command:', e);
-                        arduinoStatusDisplay.textContent = `🔴 Status failed`; // Simplified error message
+                        arduinoStatusDisplay.textContent = `🔴 Status failed`;
                     });
             });
         });
@@ -884,35 +945,38 @@
          * Updates Arduino status from Flask's /status endpoint.
          */
         function updateArduinoStatus() {
-            fetch(`${FLASK_BASE_URL}/status`)
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    return response.text();
-                })
-                .then(status => {
-                    if (status) {
-                        arduinoStatusDisplay.textContent = `🟢 Arduino Connected - Mode: ${status.replace('_OK', '')}`;
-                    } else {
-                        arduinoStatusDisplay.textContent = `🟡 Arduino Connected - Awaiting Mode`;
-                    }
-
-                    Object.values(buttons).forEach(btn => btn.classList.remove('active-btn'));
-                    if (status === 'GLIDE_ON') {
-                        buttons.glide.classList.add('active-btn');
-                        currentActiveButtonId = 'glide';
-                    } else if (status === 'CIRCLE_OK') {
-                        buttons.circle.classList.add('active-btn');
-                        currentActiveButtonId = 'circle';
-                    }
-                })
-                .catch(e => {
-                    console.error('Arduino Status fetch error:', e);
-                    arduinoStatusDisplay.textContent = `🔴 Status failed`;
-                });
+            if (!isSpeedPanelActive) {
+                fetch(`${FLASK_BASE_URL}/status`)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.text();
+                    })
+                    .then(status => {
+                        if (status) {
+                            arduinoStatusDisplay.textContent = `🟢 Arduino Connected - Mode: ${status.replace('_OK', '')}`;
+                        } else {
+                            arduinoStatusDisplay.textContent = `🟡 Arduino Connected - Awaiting Mode`;
+                        }
+                        Object.values(buttons).forEach(btn => btn.classList.remove('active-btn'));
+                        if (status === 'GLIDE_ON') {
+                            buttons.glide.classList.add('active-btn');
+                            currentActiveButtonId = 'glide';
+                        } else if (status === 'CIRCLE_OFF') {
+                            buttons.circle.classList.add('active-btn');
+                            currentActiveButtonId = 'circle';
+                        }
+                    })
+                    .catch(e => {
+                        console.error('Arduino Status fetch error:', e);
+                        arduinoStatusDisplay.textContent = `🔴 Status failed`;
+                    });
+            }
             setTimeout(updateArduinoStatus, 300);
         }
 
-        // --- Theme Toggling Logic ---
+        /**
+         * Handles theme toggling logic.
+         */
         function toggleTheme() {
             document.body.classList.toggle('light-theme');
             const isLightTheme = document.body.classList.contains('light-theme');
@@ -932,8 +996,7 @@
         }
 
         /**
-         * Updates the visibility of the logos based on the current theme.
-         * @param {boolean} isLightTheme True if the light theme is active, false otherwise.
+         * Updates logo visibility based on theme.
          */
         function updateLogoVisibility(isLightTheme) {
             if (isLightTheme) {
@@ -945,9 +1008,12 @@
             }
         }
 
+        // Event listeners for tab buttons
+        speedTabBtn.addEventListener('click', () => togglePanel('speed-panel'));
+        steeringTabBtn.addEventListener('click', () => togglePanel('steering-panel'));
         themeToggle.addEventListener('click', toggleTheme);
 
-        // On page load:
+        // On page load
         window.onload = function() {
             const savedTheme = localStorage.getItem('theme');
             const isLightThemeOnLoad = (savedTheme === 'light');
@@ -966,5 +1032,3 @@
     </script>
 </body>
 </html>
-
-
