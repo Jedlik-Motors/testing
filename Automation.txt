@@ -1,0 +1,25 @@
+[Unit]
+Description=STM32 LED Control Backend
+After=network.target
+
+[Service]
+User=jedlik
+Group=jedlik
+WorkingDirectory=/home/jedlik/Documents/GitHub/testing
+ExecStart=/usr/bin/python3 /home/jedlik/Documents/GitHub/testing/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+[Desktop Entry]
+Type=Application
+Exec=chromium-browser --start-fullscreen --disable-infobars --noerrdialogs --kiosk http://0.0.0.0:5000
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Kiosk
+Comment=Launch Chromium in kiosk mode
+
+
