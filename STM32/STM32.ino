@@ -218,39 +218,33 @@ void loop() {
         currentState = FOLLOWING_A;
         digitalWrite(ENA2_PIN, LOW);
         digitalWrite(ENA3_PIN, LOW);
-        driveMotor('B', deltaA);
-        driveMotor('C', invertMotorC ? -deltaA : deltaA);
+        driveMotorsSimultaneously('B', 'C', deltaA, invertMotorC ? -deltaA : deltaA);
       } else if (maxDelta == absDeltaB) {
         currentState = FOLLOWING_B;
         digitalWrite(ENA1_PIN, LOW);
         digitalWrite(ENA3_PIN, LOW);
-        driveMotor('A', deltaA);
-        driveMotor('C', deltaB);
+        driveMotorsSimultaneously('A', 'C', deltaB, deltaB);
       } else {
         currentState = FOLLOWING_C;
         digitalWrite(ENA1_PIN, LOW);
         digitalWrite(ENA2_PIN, LOW);
-        driveMotor('A', deltaC);
-        driveMotor('B', deltaC);
+        driveMotorsSimultaneously('A', 'B', deltaC, deltaC);
       }
       lastChangeTime = millis();
     }
   } else if (currentState == FOLLOWING_A) {
     if (deltaA != 0) {
-      driveMotor('B', deltaA);
-      driveMotor('C', invertMotorC ? -deltaA : deltaA);
+      driveMotorsSimultaneously('B', 'C', deltaA, invertMotorC ? -deltaA : deltaA);
       lastChangeTime = millis();
     }
   } else if (currentState == FOLLOWING_B) {
     if (deltaB != 0) {
-      driveMotor('A', deltaB);
-      driveMotor('C', deltaB);
+      driveMotorsSimultaneously('A', 'C', deltaB, deltaB);
       lastChangeTime = millis();
     }
   } else if (currentState == FOLLOWING_C) {
     if (deltaC != 0) {
-      driveMotor('A', deltaC);
-      driveMotor('B', deltaC);
+      driveMotorsSimultaneously('A', 'B', deltaC, deltaC);
       lastChangeTime = millis();
     }
   }
@@ -272,7 +266,65 @@ void loop() {
 
 }
 
-// Drive function
+// Drive two motors simultaneously
+void driveMotorsSimultaneously(char motor1, char motor2, long steps1, long steps2) {
+  if (steps1 == 0 && steps2 == 0) return;
+  
+  int pulsePin1, dirPin1, pulsePin2, dirPin2;
+  
+  // Assign pins for motor1
+  if (motor1 == 'A') {
+    pulsePin1 = PUL1_PIN;
+    dirPin1 = DIR1_PIN;
+  } else if (motor1 == 'B') {
+    pulsePin1 = PUL2_PIN;
+    dirPin1 = DIR2_PIN;
+  } else {
+    pulsePin1 = PUL3_PIN;
+    dirPin1 = DIR3_PIN;
+  }
+  
+  // Assign pins for motor2
+  if (motor2 == 'A') {
+    pulsePin2 = PUL1_PIN;
+    dirPin2 = DIR1_PIN;
+  } else if (motor2 == 'B') {
+    pulsePin2 = PUL2_PIN;
+    dirPin2 = DIR2_PIN;
+  } else {
+    pulsePin2 = PUL3_PIN;
+    dirPin2 = DIR3_PIN;
+  }
+  
+  // Set direction for both motors
+  digitalWrite(dirPin1, (steps1 > 0) ? HIGH : LOW);
+  digitalWrite(dirPin2, (steps2 > 0) ? HIGH : LOW);
+  
+  // Calculate maximum steps to synchronize
+  long absSteps1 = abs(steps1);
+  long absSteps2 = abs(steps2);
+  long maxSteps = max(absSteps1, absSteps2);
+  
+  // Pulse both motors simultaneously
+  for (long i = 0; i < maxSteps; i++) {
+    if (i < absSteps1) {
+      digitalWrite(pulsePin1, HIGH);
+    }
+    if (i < absSteps2) {
+      digitalWrite(pulsePin2, HIGH);
+    }
+    delayMicroseconds(PULSE_WIDTH_US);
+    if (i < absSteps1) {
+      digitalWrite(pulsePin1, LOW);
+    }
+    if (i < absSteps2) {
+      digitalWrite(pulsePin2, LOW);
+    }
+    delayMicroseconds(PULSE_DELAY_US);
+  }
+}
+
+// Drive single motor (retained for completeness)
 void driveMotor(char motor, long steps) {
   if (steps == 0) return;
   
@@ -288,7 +340,7 @@ void driveMotor(char motor, long steps) {
     dirPin = DIR3_PIN;
   }
   
-  digitalWrite(dirPin, (steps > 0) ? HIGH : LOW);  // Assume HIGH = forward
+  digitalWrite(dirPin, (steps > 0) ? HIGH : LOW);
   long absSteps = abs(steps);
   for (long i = 0; i < absSteps; i++) {
     digitalWrite(pulsePin, HIGH);
@@ -296,7 +348,7 @@ void driveMotor(char motor, long steps) {
     digitalWrite(pulsePin, LOW);
     delayMicroseconds(PULSE_DELAY_US);
   }
-}
+}  
 
 // Set all enables HIGH
 void allEnablesHigh() {
