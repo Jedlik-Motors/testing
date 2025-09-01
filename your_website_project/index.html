@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jedlik Motors - Site Nearly Ready</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Dark Theme Only */
+        :root {
+            --bg-start: #0a0a0c;
+            --bg-end: #000000;
+            --main-text-color: #e0f7fa;
+            --sub-text-color: #80deea;
+            --highlight-color: #00e6ff;
+            --dashboard-panel-bg: rgba(10, 10, 12, 0.9);
+            --dashboard-border: #00e6ff;
+            --dashboard-shadow-outer: rgba(0, 230, 255, 0.6);
+            --dashboard-shadow-inner: rgba(255, 255, 255, 0.15);
+            --progress-bar-bg: rgba(255, 255, 255, 0.1);
+            --progress-fill-start: #00e6ff;
+            --progress-fill-end: #007bff;
+            --progress-fill-shadow: rgba(0, 230, 255, 0.5);
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner); }
+            50% { box-shadow: 0 0 45px var(--dashboard-shadow-outer), inset 0 0 22px var(--dashboard-shadow-inner); }
+            100% { box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner); }
+        }
+
+        @keyframes progress-glow {
+            0% { box-shadow: inset 0 0 5px var(--progress-fill-shadow), 0 0 10px var(--progress-fill-shadow); }
+            50% { box-shadow: inset 0 0 8px var(--progress-fill-shadow), 0 0 15px var(--progress-fill-shadow); }
+            100% { box-shadow: inset 0 0 5px var(--progress-fill-shadow), 0 0 10px var(--progress-fill-shadow); }
+        }
+        @keyframes text-glow {
+            0% { text-shadow: 0 0 4px var(--highlight-color); }
+            50% { text-shadow: 0 0 12px var(--highlight-color), 0 0 20px var(--highlight-color); }
+            100% { text-shadow: 0 0 4px var(--highlight-color); }
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, var(--bg-start) 0%, var(--bg-end) 100%);
+            color: var(--main-text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            background: var(--dashboard-panel-bg);
+            border-radius: 25px;
+            border: 3px solid var(--dashboard-border);
+            box-shadow: 0 0 30px var(--dashboard-shadow-outer), inset 0 0 15px var(--dashboard-shadow-inner);
+            animation: pulse-border 5s infinite alternate ease-in-out;
+            backdrop-filter: blur(15px);
+            text-align: center;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        .logo-container img {
+            height: 60px;
+            width: auto;
+        }
+        
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--highlight-color);
+            text-shadow: 0 0 10px var(--highlight-color);
+            animation: text-glow 3s infinite alternate;
+        }
+
+        .subtext {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            color: var(--sub-text-color);
+            margin-top: 10px;
+        }
+
+        .progress-container {
+            width: 80%;
+            max-width: 600px;
+            height: 40px;
+            background: var(--progress-bar-bg);
+            border-radius: 20px;
+            margin-top: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--highlight-color);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--progress-fill-start), var(--progress-fill-end));
+            transition: width 1s ease-in-out;
+            animation: progress-glow 2s infinite alternate;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--main-text-color);
+            text-shadow: 0 0 5px var(--highlight-color);
+        }
+        .coming-soon-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--highlight-color);
+            text-shadow: 0 0 10px var(--highlight-color);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+            .logo-container {
+                top: 10px;
+                left: 10px;
+            }
+            .logo-container img {
+                height: 40px;
+            }
+            .main-title {
+                font-size: 2rem;
+            }
+            .subtext {
+                font-size: 1.2rem;
+            }
+            .progress-container {
+                height: 30px;
+            }
+            .progress-text {
+                font-size: 1rem;
+            }
+            .coming-soon-title {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Logo Container -->
+        <div class="logo-container">
+            <img src="static/Jedlik-logo-white_00.png" alt="Jedlik Logo">
+        </div>
+        
+        <h1 class="coming-soon-title">WEBSITE UNDER CONSTRUCTION</h1>
+        <h1 class="main-title">JEDLIK MOTORS</h1>
+        <p class="subtext">Pioneering the Future of Urban Commuting</p>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+    </div>
+    
+    <script>
+        window.onload = function() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercentage = Math.floor(Math.random() * (80 - 70 + 1)) + 70;
+
+            progressBar.style.width = progressPercentage + '%';
+            
+            let currentProgress = 0;
+            const animationInterval = setInterval(() => {
+                if (currentProgress >= progressPercentage) {
+                    clearInterval(animationInterval);
+                } else {
+                    currentProgress++;
+                    progressText.textContent = currentProgress + '%';
+                }
+            }, 20);
+        };
+    </script>
+</body>
+</html>
