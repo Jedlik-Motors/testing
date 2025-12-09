@@ -202,10 +202,20 @@ void loop() {
   prevA = currA;
   prevB = currB;
   prevC = currC;
+  //deadband logic
+  const long ENC_DEADBAND = 5;   // ignore noise below 5 pulses
+
+  if (abs(deltaA) < ENC_DEADBAND) deltaA = 0;
+  if (abs(deltaB) < ENC_DEADBAND) deltaB = 0;
+  if (abs(deltaC) < ENC_DEADBAND) deltaC = 0; 
+ //deadband logic
+  
   
   long absDeltaA = abs(deltaA);
   long absDeltaB = abs(deltaB);
   long absDeltaC = abs(deltaC);
+
+
   
   bool hasMovement = (deltaA != 0 || deltaB != 0 || deltaC != 0);
   
